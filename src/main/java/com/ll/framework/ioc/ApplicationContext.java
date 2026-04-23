@@ -1,9 +1,12 @@
 package com.ll.framework.ioc;
 
+import com.ll.framework.ioc.annotations.Bean;
 import com.ll.framework.ioc.annotations.Component;
+import com.ll.framework.ioc.annotations.Configuration;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +15,7 @@ public class ApplicationContext {
     private Reflections reflections;
     private final Map<String, Object> singletonObjects = new HashMap<>();
     private final Map<String, Class<?>> beanDefinitionMap = new HashMap<>();
+    private final Map<String, Method> beanMethodMap = new HashMap<>();
 
     public ApplicationContext(String basePackage) {
         reflections = new Reflections(basePackage);
@@ -26,6 +30,17 @@ public class ApplicationContext {
 
             beanDefinitionMap.put(beanName, clazz);
         }
+
+        Set<Class<?>> configs = reflections.getTypesAnnotatedWith(Configuration.class);
+
+        for (Class<?> configClass : configs) {
+            for (Method method : configClass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(Bean.class)) {
+                    String beanName = method.getName();
+                    beanMethodMap.put(beanName, method);
+                }
+            }
+        }
     }
 
     public <T> T genBean(String beanName) {
@@ -36,6 +51,13 @@ public class ApplicationContext {
 
         Class<?> someClass = beanDefinitionMap.get(beanName);
         if (someClass == null) {
+
+            Method beanMethod = beanMethodMap.get(beanName);
+
+            if (beanMethod != null) {
+                return (T) createBeanFromMethod(beanName, beanMethod);
+            }
+
             throw new RuntimeException("Bean not found: " + beanName);
         }
 
@@ -83,6 +105,31 @@ public class ApplicationContext {
             singletonObjects.put(beanName, instance);
 
             return (T) instance;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Object createBeanFromMethod(String beanName, Method method) {
+        try {
+            Class<?> configClass = method.getDeclaringClass();
+            Object configInstance = genBean(
+                    configClass.getSimpleName().substring(0, 1).toLowerCase()
+                            + configClass.getSimpleName().substring(1)
+            );
+
+            Class<?>[] paramTypes = method.getParameterTypes();
+            Object[] args = new Object[paramTypes.length];
+
+            for (int i = 0; i < paramTypes.length; i++) {
+                args[i] = getBeanByType(paramTypes[i]);
+            }
+
+            Object bean = method.invoke(configInstance, args);
+            singletonObjects.put(beanName, bean);
+
+            return bean;
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
