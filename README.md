@@ -9,7 +9,7 @@
 </div>
 
 <div class="section">
-    <h2>>1️⃣ 동작 흐름</h2>
+    <h2>1️⃣ 동작 흐름</h2>
 
 <pre>
   <code>ApplicationContext 생성
@@ -60,16 +60,13 @@ singletonObjects 저장
 </div>
 <div class="section">
     <h2>4️⃣ 후기</h2>
-
-    <p>
-        v1에서는 모든 Bean을 수동으로 생성했지만,
+<ul>
+        <li>v1에서는 모든 Bean을 수동으로 생성했지만,
         v2에서는 <b>어노테이션 기반 스캔 + Reflection + DI 자동화</b>를 통해
-        Spring의 핵심 구조를 모사하였습니다.
-    </p>
-
-    <p>
-        이를 통해 Bean 등록 → 의존성 해결 → 싱글톤 관리라는
-        Spring 컨테이너의 핵심 흐름을 직접 구현할 수 있었습니다.
-    </p>
+        Spring의 핵심 구조를 모사하였습니다.</li>
+        <li>이를 통해 Bean 등록 → 의존성 해결 → 싱글톤 관리라는
+        Spring 컨테이너의 핵심 흐름을 직접 구현할 수 있었습니다.</li>
+</ul>
+        
 </div>
 
